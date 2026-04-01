@@ -102,6 +102,54 @@ if st.session_state["role"] == "Doctor":
         with col3:
             st.metric("Total Appointments", len(appointments))
 
+    # manage slots page for dr.
+    elif st.session_state["page"] == "manage_slots":
+        st.title("Manage Time Slots")
+        st.divider()
+
+        tab1, tab2 = st.tabs(["View All Slots", "Add New Slots"])
+
+        with tab1:
+            if len(slots) > 0:
+                st.dataframe(slots)
+            else:
+                st.warning("No time slots created yet.")
+        
+        with tab2:
+            st.subheader("Add a New Time Slot")
+            with st.container(border = True):
+                slot_date = st.date_input("Date", key = "slot_date_input")
+                slot_time = st.date_input("Time", ["9:00 AM", "10:00 AM", "11:00 AM",
+                                          "1:00 AM", "2:00 AM", "3:00 AM", "4:00 AM"],
+                                          key = "slot_time_input")
+                if st.button("Create Slot", key = "create_slot_btn", type = "primary",
+                             use_container_width = True):
+                    with st.spinner("Creating slot..."):
+                        time.sleep(2)
+
+                        # generate id
+                        new_slot_id = "SLOT" + str(len(slots) + 1)
+
+                        # add to list
+                        slots.append(
+                            {
+                                "slot_id" : new_slot_id,
+                                "doctor_email" : st.session_state["user"]["email"],
+                                "date" : str(slot_date),
+                                "time" : slot_time,
+                                "status" : "Available"
+                            }
+                        )
+
+                        # save to json
+                        with open (json_path_slots, "w") as f:
+                            json.dump(slots, f)
+                        
+                        st.success("New time slot created!")
+                        time.sleep(2)
+                        st.rerun()
+
+
 elif st.session_state["role"] == "Patient":
     st.markdown("## Patient Dashboard - Coming Soon")
 
