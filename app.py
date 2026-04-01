@@ -83,7 +83,24 @@ if st.session_state["role"] == "Doctor":
 
     # dr. home page
 
-    if st.session_state["page"]
+    if st.session_state["page"] == "home":
+        st.title("Doctor Dashboard")
+        st.markdown(f"Welcome, **{st.session_state['user']['full_name']}**!")
+        st.divider()
+
+        # display metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metrics("Total Slots", len(slots))
+        with col2:
+            # counts and shows available slots
+            available_count = 0
+            for slot in slots:
+                if slot["status"] == "Available":
+                    available_count += 1
+            st.metric("Available Slots", available_count)
+        with col3:
+            st.metric("Total Appointments", len(appointments))
 
 elif st.session_state["role"] == "Patient":
     st.markdown("## Patient Dashboard - Coming Soon")
