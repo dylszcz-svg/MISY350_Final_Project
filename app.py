@@ -70,8 +70,111 @@ elif st.session_state["role"] == "Patient":
     st.markdown("## Patient Dashboard - Coming Soon")
 
 else:
-# guest view
+    # guest view
     st.title("Clinic Appointment Tracker")
     st.caption("A scheduling portal for patients and doctors")
     st.divider()
-    st.info("Login and Registration coming next!")
+
+    tab_login, tab_register = st.tabs(["Log In", "Create Account"])
+
+    with tab_login:
+        st.subheader("Log In")
+        with st.container(border=True):
+            email_input = st.text_input("Email", key="login_email",
+                                        placeholder="Enter your email")
+            password_input = st.text_input("Password", type="password",
+                                           key="login_password")
+
+            if st.button("Log In", type="primary",
+                         use_container_width=True, key="login_btn"):
+                if not email_input or not password_input:
+                    st.warning("Please enter your email and password.")
+                else:
+                    with st.spinner("Logging in..."):
+                        time.sleep(2)
+
+                        # search for user
+                        found_user = None
+                        for user in users:
+                            if user["email"].strip().lower() == email_input.strip().lower() and user["password"] == password_input:
+                                found_user = user
+                                break
+
+                        if found_user:
+                            st.session_state["logged_in"] = True
+                            st.session_state["user"] = found_user
+                            st.session_state["role"] = found_user["role"]
+                            st.session_state["page"] = "home"
+
+                            st.success(f"Welcome back, {found_user['full_name']}!")
+                            time.sleep(2)
+                            st.rerun()
+                        else:
+                            st.error("Invalid email or password.")
+
+    with tab_register:
+        st.subheader("Create a New Account")
+        with st.container(border=True):
+            new_name = st.text_input("Full Name", key="register_name",
+                                     placeholder="Enter your full name")
+            new_email = st.text_input("Email", key="register_email",
+                                      placeholder="Enter your email")
+            new_password = st.text_input("Password", type="password",
+                                         key="register_password")
+            new_role = st.radio("I am a...", ["Patient", "Doctor"],
+                                key="register_role", horizontal=True)
+
+            if st.button("Create Account", key="register_btn",
+                         use_container_width=True):
+                if not new_name or not new_email or not new_password:
+                    st.warning("Please fill out all fields.")
+                else:
+                    with st.spinner("Creating account..."):
+                        time.sleep(2)
+
+                        # check if email exists
+                        email_exists = False
+                        for user in users:
+                            if user["email"].strip().lower() == new_email.strip().lower():
+                                email_exists = True
+                                break
+
+                        if email_exists:
+                            st.error("This email is already registered.")
+                        else:
+                            users.append({
+                                "id": str(uuid.uuid4()),
+                                "email": new_email,
+                                "full_name": new_name,
+                                "password": new_password,
+                                "role": new_role
+                            })
+
+                            with open(json_path_users, "w") as f:
+                                json.dump(users, f)
+
+                            st.success("Account created! You can now log in.")
+                            time.sleep(2)
+                            st.rerun()
+
+
+# sidebar
+with st.sidebar:
+    st.markdown("### Clinic Manager")
+    if st.session_state["logged_in"]:
+        user = st.session_state["user"]
+        st.markdown(f"Logged in as: **{user['full_name']}**")
+        st.markdown(f"Role: **{st.session_state['role']}**")
+        st.divider()
+
+        if st.button("Log Out", type="primary",
+                     use_container_width=True, key="logout_btn"):
+            with st.spinner("Logging out..."):
+                st.session_state["logged_in"] = False
+                st.session_state["user"] = None
+                st.session_state["role"] = None
+                st.session_state["page"] = "login"
+                time.sleep(2)
+                st.rerun()
+    else:
+        st.info("Please log in to continue.")
