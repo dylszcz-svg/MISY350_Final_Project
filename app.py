@@ -64,7 +64,26 @@ if json_path_appointments.exists():
 
 # role based routing
 if st.session_state["role"] == "Doctor":
-    st.markdown("## Doctor Dashboard - Coming Soon")
+    
+    # dr. sidebar
+    with st.sidebar:
+        st.divider()
+        if st.button("Home", key = "doc_home_btn", use_container_width = True):
+            st.session_state["page"] = 'home'
+            st.rerun()
+        
+        if st.button("Manage Slots", key = "doc_slots_btn", use_container_width = True):
+            st.session_state["page"] = "manage_slots"
+            st.rerun()
+        
+        if st.button("View Appointments", key = "doc_appts_btn", use_container_width = True):
+            st.session_state["page"] = "view_appointments"
+            st.rerun()
+
+
+    # dr. home page
+
+    if st.session_state["page"]
 
 elif st.session_state["role"] == "Patient":
     st.markdown("## Patient Dashboard - Coming Soon")
