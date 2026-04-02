@@ -91,7 +91,7 @@ if st.session_state["role"] == "Doctor":
         # display metrics
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metrics("Total Slots", len(slots))
+            st.metric("Total Slots", len(slots))
         with col2:
             # counts and shows available slots
             available_count = 0
@@ -148,6 +148,17 @@ if st.session_state["role"] == "Doctor":
                         st.success("New time slot created!")
                         time.sleep(2)
                         st.rerun()
+
+    # View appointment page
+
+    elif st.session_state["page"] == "view_appointments":
+        st.title("Patient Appointments")
+        st.divider()
+
+        if len(appointments) > 0:
+            st.dataframe(appointments)
+        else:
+            st.info("No appointments booked yet.")
 
 
 elif st.session_state["role"] == "Patient":
