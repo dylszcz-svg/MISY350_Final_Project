@@ -119,9 +119,12 @@ if st.session_state["role"] == "Doctor":
             st.subheader("Add a New Time Slot")
             with st.container(border = True):
                 slot_date = st.date_input("Date", key = "slot_date_input")
-                slot_time = st.date_input("Time", ["9:00 AM", "10:00 AM", "11:00 AM",
-                                          "1:00 AM", "2:00 AM", "3:00 AM", "4:00 AM"],
-                                          key = "slot_time_input")
+                slot_time = st.selectbox("Time",
+                    ["9:00 AM", "10:00 AM", "11:00 AM",
+                     "1:00 PM", "2:00 PM", "3:00 PM",
+                     "4:00 PM"],
+                    key="slot_time_input"),
+            
                 if st.button("Create Slot", key = "create_slot_btn", type = "primary",
                              use_container_width = True):
                     with st.spinner("Creating slot..."):
