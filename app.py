@@ -123,7 +123,7 @@ if st.session_state["role"] == "Doctor":
                     ["9:00 AM", "10:00 AM", "11:00 AM",
                      "1:00 PM", "2:00 PM", "3:00 PM",
                      "4:00 PM"],
-                    key="slot_time_input"),
+                    key="slot_time_input")
             
                 if st.button("Create Slot", key = "create_slot_btn", type = "primary",
                              use_container_width = True):
@@ -165,7 +165,125 @@ if st.session_state["role"] == "Doctor":
 
 
 elif st.session_state["role"] == "Patient":
-    st.markdown("## Patient Dashboard - Coming Soon")
+
+    # patient sidebar navigation
+    with st.sidebar:
+        st.divider()
+        if st.button("Home", key="pat_home_btn",
+                     use_container_width=True):
+            st.session_state["page"] = "home"
+            st.rerun()
+
+        if st.button("Book Appointment", key="pat_book_btn",
+                     use_container_width=True):
+            st.session_state["page"] = "book"
+            st.rerun()
+
+        if st.button("My Appointments", key="pat_myappts_btn",
+                     use_container_width=True):
+            st.session_state["page"] = "my_appointments"
+            st.rerun()
+
+    # patient home page
+    if st.session_state["page"] == "home":
+        st.title("Patient Dashboard")
+        st.markdown(f"Welcome, **{st.session_state['user']['full_name']}**!")
+        st.divider()
+
+        # count this patients appointments
+        my_appt_count = 0
+        for appt in appointments:
+            if appt["patient_email"] == st.session_state["user"]["email"]:
+                my_appt_count += 1
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("My Appointments", my_appt_count)
+        with col2:
+            available_count = 0
+            for slot in slots:
+                if slot["status"] == "Available":
+                    available_count += 1
+            st.metric("Available Slots", available_count)
+
+    # book appointment page
+    elif st.session_state["page"] == "book":
+        st.title("Book an Appointment")
+        st.divider()
+
+        # only show available slots
+        available_slots = []
+        for slot in slots:
+            if slot["status"] == "Available":
+                available_slots.append(slot)
+
+        if len(available_slots) == 0:
+            st.warning("No available time slots right now.")
+        else:
+            with st.container(border=True):
+                selected_slot = st.selectbox(
+                    "Select a Time Slot",
+                    options=available_slots,
+                    format_func=lambda x: f"{x['date']} at {x['time']}",
+                    key="book_slot_select"
+                )
+
+                patient_notes = st.text_area(
+                    "Notes for the Doctor (optional)",
+                    placeholder="Describe your symptoms...",
+                    key="book_notes_input")
+
+                if st.button("Book This Slot", type="primary",
+                             use_container_width=True,
+                             key="book_appt_btn"):
+                    with st.spinner("Booking appointment..."):
+                        time.sleep(2)
+
+                        # create the appointment record
+                        appointments.append({
+                            "appointment_id": "APT-" + str(uuid.uuid4())[:8],
+                            "slot_id": selected_slot["slot_id"],
+                            "patient_email": st.session_state["user"]["email"],
+                            "patient_name": st.session_state["user"]["full_name"],
+                            "date": selected_slot["date"],
+                            "time": selected_slot["time"],
+                            "status": "Booked",
+                            "notes": patient_notes
+                        })
+
+                        # mark the slot as booked
+                        for slot in slots:
+                            if slot["slot_id"] == selected_slot["slot_id"]:
+                                slot["status"] = "Booked"
+                                break
+
+                        # save both json files
+                        with open(json_path_appointments, "w") as f:
+                            json.dump(appointments, f)
+
+                        with open(json_path_slots, "w") as f:
+                            json.dump(slots, f)
+
+                        st.success("Appointment booked!")
+                        st.balloons()
+                        time.sleep(3)
+                        st.rerun()
+
+    # my appointments page
+    elif st.session_state["page"] == "my_appointments":
+        st.title("My Appointments")
+        st.divider()
+
+        # filter for this patient only
+        my_appointments = []
+        for appt in appointments:
+            if appt["patient_email"] == st.session_state["user"]["email"]:
+                my_appointments.append(appt)
+
+        if len(my_appointments) == 0:
+            st.info("You have no appointments yet.")
+        else:
+            st.dataframe(my_appointments)
 
 else:
     # guest view
