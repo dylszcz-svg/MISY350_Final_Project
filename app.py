@@ -151,17 +151,65 @@ if st.session_state["role"] == "Doctor":
                         st.success("New time slot created!")
                         time.sleep(2)
                         st.rerun()
-
-    # View appointment page
-
+    # view appointments page (with update)
     elif st.session_state["page"] == "view_appointments":
         st.title("Patient Appointments")
         st.divider()
-
-        if len(appointments) > 0:
-            st.dataframe(appointments)
-        else:
+ 
+        if len(appointments) == 0:
             st.info("No appointments booked yet.")
+        else:
+            col1, col2 = st.columns([3, 2])
+ 
+            with col1:
+                st.dataframe(appointments)
+ 
+            with col2:
+                with st.container(border=True):
+                    st.subheader("Update Status")
+ 
+                    selected_appt = st.selectbox(
+                        "Select Appointment",
+                        options=appointments,
+                        format_func=lambda x: f"{x['patient_name']} - {x['date']}",
+                        key="doc_select_appt"
+                    )
+ 
+                    if selected_appt:
+                        st.markdown(f"**Current Status:** {selected_appt['status']}")
+                        st.markdown(f"**Patient Notes:** {selected_appt['notes']}")
+ 
+                        new_status = st.selectbox(
+                            "Change Status To",
+                            ["Booked", "Completed", "No-Show", "Cancelled"],
+                            key="doc_status_select")
+ 
+                        doctor_note = st.text_area("Doctor Notes",
+                            placeholder="Add notes...",
+                            key="doc_note_input")
+ 
+                        if st.button("Update Status",
+                                     type="primary",
+                                     use_container_width=True,
+                                     key="doc_update_btn"):
+                            with st.spinner("Updating..."):
+                                time.sleep(2)
+ 
+                                # find and update the appointment
+                                for appt in appointments:
+                                    if appt["appointment_id"] == selected_appt["appointment_id"]:
+                                        appt["status"] = new_status
+                                        appt["notes"] = doctor_note
+                                        break
+ 
+                                # save to json
+                                with open(json_path_appointments, "w") as f:
+                                    json.dump(appointments, f)
+ 
+                                st.success("Status updated!")
+                                time.sleep(2)
+                                st.rerun()
+
 
 
 elif st.session_state["role"] == "Patient":
