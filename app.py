@@ -254,12 +254,12 @@ elif st.session_state["role"] == "Patient":
                     available_count += 1
             st.metric("Available Slots", available_count)
 
-    # book appointment page
+    
     elif st.session_state["page"] == "book":
         st.title("Book an Appointment")
         st.divider()
 
-        # only show available slots
+        
         available_slots = []
         for slot in slots:
             if slot["status"] == "Available":
@@ -287,7 +287,7 @@ elif st.session_state["role"] == "Patient":
                     with st.spinner("Booking appointment..."):
                         time.sleep(2)
 
-                        # create the appointment record
+                        
                         appointments.append({
                             "appointment_id": "APT-" + str(uuid.uuid4())[:8],
                             "slot_id": selected_slot["slot_id"],
@@ -299,13 +299,13 @@ elif st.session_state["role"] == "Patient":
                             "notes": patient_notes
                         })
 
-                        # mark the slot as booked
+                      
                         for slot in slots:
                             if slot["slot_id"] == selected_slot["slot_id"]:
                                 slot["status"] = "Booked"
                                 break
 
-                        # save both json files
+                        
                         with open(json_path_appointments, "w") as f:
                             json.dump(appointments, f)
 
@@ -317,12 +317,12 @@ elif st.session_state["role"] == "Patient":
                         time.sleep(3)
                         st.rerun()
 
-    # my appointments page
+ 
     elif st.session_state["page"] == "my_appointments":
         st.title("My Appointments")
         st.divider()
 
-        # filter for this patient only
+      
         my_appointments = []
         for appt in appointments:
             if appt["patient_email"] == st.session_state["user"]["email"]:
@@ -332,6 +332,57 @@ elif st.session_state["role"] == "Patient":
             st.info("You have no appointments yet.")
         else:
             st.dataframe(my_appointments)
+                        
+            st.divider()
+            with st.container(border=True):
+                st.subheader("Cancel an Appointment")
+ 
+                
+                booked_appts = []
+                for appt in my_appointments:
+                    if appt["status"] == "Booked":
+                        booked_appts.append(appt)
+ 
+                if len(booked_appts) == 0:
+                    st.info("No active appointments to cancel.")
+                else:
+                    cancel_appt = st.selectbox(
+                        "Select Appointment to Cancel",
+                        options=booked_appts,
+                        format_func=lambda x: f"{x['date']} at {x['time']}",
+                        key="cancel_appt_select")
+ 
+                    if st.button("Cancel This Appointment",
+                                 type="primary",
+                                 use_container_width=True,
+                                 key="cancel_appt_btn"):
+                        with st.spinner("Cancelling..."):
+                            time.sleep(2)
+ 
+                           
+                            for appt in appointments:
+                                if appt["appointment_id"] == cancel_appt["appointment_id"]:
+                                    appt["status"] = "Cancelled"
+                                    break
+ 
+                            
+                            for slot in slots:
+                                if slot["slot_id"] == cancel_appt["slot_id"]:
+                                    slot["status"] = "Available"
+                                    break
+ 
+                            
+                            with open(json_path_appointments, "w") as f:
+                                json.dump(appointments, f)
+ 
+                            with open(json_path_slots, "w") as f:
+                                json.dump(slots, f)
+ 
+                            st.success("Appointment cancelled.")
+                            time.sleep(2)
+                            st.rerun()
+
+
 
 else:
     # guest view
