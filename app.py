@@ -26,6 +26,14 @@ if "role" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state["page"] = "login"
 
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [
+        {
+            "role" : "assistant",
+            "content" : "Hi! I am your Clinic Assistant. How can I help you?"
+        }
+    ]
+
 
 # load users
 users = [
@@ -151,6 +159,7 @@ if st.session_state["role"] == "Doctor":
                         st.success("New time slot created!")
                         time.sleep(2)
                         st.rerun()
+
     # view appointments page (with update)
     elif st.session_state["page"] == "view_appointments":
         st.title("Patient Appointments")
@@ -255,67 +264,75 @@ elif st.session_state["role"] == "Patient":
             st.metric("Available Slots", available_count)
 
     
+    # book appointment page
+
     elif st.session_state["page"] == "book":
         st.title("Book an Appointment")
         st.divider()
 
         
-        available_slots = []
-        for slot in slots:
-            if slot["status"] == "Available":
-                available_slots.append(slot)
+        col1, col2 = st.columns([3,2])
 
-        if len(available_slots) == 0:
-            st.warning("No available time slots right now.")
-        else:
-            with st.container(border=True):
-                selected_slot = st.selectbox(
-                    "Select a Time Slot",
-                    options=available_slots,
-                    format_func=lambda x: f"{x['date']} at {x['time']}",
-                    key="book_slot_select"
-                )
+        with col1:
+            available_slots = []
+            for slot in slots:
+                if slot["status"] == "Available":
+                    available_slots.append(slot)
+            
+            if len(available_slots) == 0:
+                st.warning("No available time slots right now.")
+            else:
+                with st.container(border = True):
+                    selected_slot = st.selectbox(
+                        "Select a Time Slot", options = available_slots,
+                        format_func = lambda x: f"{x["date"]} at {x["time"]}", key = "book_slot_select"
+                    )
+                    
+                    patient_notes = st.text_area(
+                        "Notes for the Dcoctor (Optional)", placeholder = "Describe your symptoms...",
+                        key = "book_notes_input"
+                    )
 
-                patient_notes = st.text_area(
-                    "Notes for the Doctor (optional)",
-                    placeholder="Describe your symptoms...",
-                    key="book_notes_input")
+                    if st.button("Book This Slot", type = "primary", use_container_width = True, key = "book_apt_btn"):
+                        with st.spinner("Booking..."):
+                            time.sleep(2)
 
-                if st.button("Book This Slot", type="primary",
-                             use_container_width=True,
-                             key="book_appt_btn"):
-                    with st.spinner("Booking appointment..."):
-                        time.sleep(2)
+                            # record appointments
+                            appointments.append(
+                                {
+                                    "appointment_id" : "APT-" + str(uuid.uuid4())[:8],
+                                    "slot_id" : selected_slot["slot_id"],
+                                    "patient_email" : st.session_state["user"]["email"],
+                                    "patient_name" : st.session_state["user"]["full_name"],
+                                    "date" : selected_slot["date"],
+                                    "time" : selected_slot["time"],
+                                    "status" : "Booked",
+                                    "notes" : patient_notes
+                                }
+                            )
 
-                        
-                        appointments.append({
-                            "appointment_id": "APT-" + str(uuid.uuid4())[:8],
-                            "slot_id": selected_slot["slot_id"],
-                            "patient_email": st.session_state["user"]["email"],
-                            "patient_name": st.session_state["user"]["full_name"],
-                            "date": selected_slot["date"],
-                            "time": selected_slot["time"],
-                            "status": "Booked",
-                            "notes": patient_notes
-                        })
+                            # marking booked slots
+                            for slot in slots:
+                                if slot["slot_id"] == selected_slot["slot_id"]:
+                                    slot["status"] = "Booked"
+                                    break
+                            
+                            # save to json
+                            with open(json_path_appointments, "w") as f:
+                                json.dump(appointments, f)
+                            with open(json_path_slots, "w") as f:
+                                json.dump(slots, f)
+                            
+                            st.success("Appointment Booked!")
+                            st.balloons()
+                            time.sleep(3)
+                            st.rerun()
+        
+        # chatbot
 
-                      
-                        for slot in slots:
-                            if slot["slot_id"] == selected_slot["slot_id"]:
-                                slot["status"] = "Booked"
-                                break
+        with col2:
+            
 
-                        
-                        with open(json_path_appointments, "w") as f:
-                            json.dump(appointments, f)
-
-                        with open(json_path_slots, "w") as f:
-                            json.dump(slots, f)
-
-                        st.success("Appointment booked!")
-                        st.balloons()
-                        time.sleep(3)
-                        st.rerun()
 
  
     elif st.session_state["page"] == "my_appointments":
