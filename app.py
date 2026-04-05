@@ -331,7 +331,81 @@ elif st.session_state["role"] == "Patient":
         # chatbot
 
         with col2:
+            st.subheader("Clinic Assistant")
+            col_a, col_b = st.columns([3,1])
+            with col_a:
+                st.caption("Try: When is my next appointment?")
+            with col_b:
+                if st.button("Clear Chat", key = "clear_chat_btn"):
+                    st.session_state["messages"] = [
+                        {
+                            "role" : "assistant",
+                            "content" : "How can I help you?"
+                        }
+                    ]
+                    st.rerun()
+
+            with st.container(border = True, height = 300):
+                for message in st.session_state["messages"]:
+                    with st.chat_message(message["role"]):
+                        st.write(message["content"])
             
+            user_input = st.chat_input("Ask a question...", key = "chat_input")
+
+            if user_input:
+                with st.spinner("Thinking..."):
+                    st.session_state["messages"].append(
+                        {
+                            "role" : "user",
+                            "content" : user_input
+                        }
+                    )
+
+                    # responses
+                    chatbot_responses = "I am not sure. Try asking something else!"
+                    question = user_input.strip().lower()
+
+                    if "next appointment" in question or "when is my" in question:
+                        # find patients booked appointments
+                        my_booked = []
+                        for appt in appointments:
+                            if appt["patient_email"] == st.session_state["user"]["email"] and appt["status"] == "Booked":
+                                my_booked.append(appt)
+                        
+                        if len(my_booked) > 0:
+                            chatbot_response = f"Your next appointment is on {my_booked[0]['date']} at {my_booked[0]['time']}."
+                        else:
+                            chatbot_response = "You have no upcoming appointments."
+ 
+                    elif "available" in question or "open" in question or "slots" in question:
+
+                        # count open slots
+
+                        count = 0
+                        for slot in slots:
+                            if slot["status"] == "Available":
+                                count += 1
+                        chatbot_response = f"There are {count} available slots. Select one from the dropdown."
+
+ 
+                    elif "book" in question or "how do i" in question or "schedule" in question:
+                        chatbot_response = "Select a time slot from the dropdown on the left and click Book This Slot."
+
+ 
+                    elif "cancel" in question:
+                        chatbot_response = "Go to My Appointments from the sidebar to cancel."
+
+ 
+                    elif "hello" in question or "hi" in question or "hey" in question:
+                        chatbot_response = f"Hello {st.session_state['user']['full_name']}! How can I help?"
+ 
+ 
+                    st.session_state["messages"].append(
+                        {"role": "assistant", "content": chatbot_response})
+                    time.sleep(1)
+                    st.rerun()
+
+
 
 
  
