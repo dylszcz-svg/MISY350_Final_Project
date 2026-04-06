@@ -564,7 +564,7 @@ else:
                             st.rerun()
 
 
-# sidebar
+#  sidebar
 with st.sidebar:
     st.markdown("### Clinic Manager")
     if st.session_state["logged_in"]:
