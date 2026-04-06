@@ -584,3 +584,4 @@ with st.sidebar:
                 st.rerun()
     else:
         st.info("Please log in to continue.")
+        
