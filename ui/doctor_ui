@@ -75,3 +75,60 @@ def render_doctor(manager, slot_store, appt_store):
                         st.success("New time slot created!")
                         time.sleep(2)
                         st.rerun()
+
+    # view appointments page with update
+
+    elif st.session_state["page"] == "view_appointments":
+        st.title("Patient Appointments")
+        st.divider()
+
+
+        if len(manager.appointments) == 0:
+            st.info("No appointments booked yet.")
+        else:
+            col1, col2 = st.columns([3, 2])
+
+            with col1:
+                st.dataframe(manager.appointments)
+
+            with col2:
+                with st.container(border=True):
+                    st.subheader("Update Status")
+
+                    selected_appt = st.selectbox(
+                        "Select Appointment",
+                        options=manager.appointments,
+                        format_func=lambda x: f"{x['patient_name']} - {x['date']}",
+                        key="doc_select_appt"
+                    )
+
+                    if selected_appt:
+                        st.markdown(f"**Current Status:** {selected_appt['status']}")
+                        st.markdown(f"**Patient Notes:** {selected_appt['notes']}")
+
+                        new_status = st.selectbox(
+                            "Change Status To",
+                            ["Booked", "Completed", "No-Show", "Cancelled"],
+                            key="doc_status_select")
+
+                        doctor_note = st.text_area("Doctor Notes",
+                            placeholder="Add notes...",
+                            key="doc_note_input")
+
+                        if st.button("Update Status", type="primary",
+                                     use_container_width=True,
+                                     key="doc_update_btn"):
+                            with st.spinner("Updating..."):
+                                time.sleep(2)
+
+                                manager.update_appointment_status(
+                                    selected_appt["appointment_id"],
+                                    new_status, doctor_note
+                                )
+
+                                appt_store.save(manager.appointments)
+
+
+                                st.success("Status updated!")
+                                time.sleep(2)
+                                st.rerun()
