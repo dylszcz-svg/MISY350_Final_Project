@@ -45,3 +45,33 @@ def render_login(manager, user_store):
                             st.rerun()
                         else:
                             st.error("Invalid email or password.")
+
+            
+    with tab_register:
+        st.subheader("Create a New Account")
+        with st.container(border=True):
+            new_name = st.text_input("Full Name", key="register_name",
+                                     placeholder="Enter your full name")
+            new_email = st.text_input("Email", key="register_email",
+                                      placeholder="Enter your email")
+            new_password = st.text_input("Password", type="password",
+                                         key="register_password")
+            new_role = st.radio("I am a...", ["Patient", "Doctor"],
+                                key="register_role", horizontal=True)
+            
+            if st.button("Create Account", key="register_btn", use_container_width=True):
+                if not new_name or not new_email or not new_password:
+                    st.warning("Please fill out all fields.")
+                else:
+                    with st.spinner("Creating account..."):
+                        time.sleep(2)
+
+                        if manager.email_exists(new_email):
+                            st.error("This email is already registered.")
+                        else:
+                            manager.register_user(new_name, new_email, new_password, new_role)
+                            user_store.save(manager.users)
+
+                            st.success("Account created! You can now log in.")
+                            time.sleep(2)
+                            st.rerun()
