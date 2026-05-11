@@ -13,7 +13,11 @@ def render_doctor(manager, slot_store, appt_store):
             st.session_state["page"] = "home"
             st.rerun()
 
-  
+        if st.button("Manage Slots", key="doc_slots_btn",
+                     use_container_width=True):
+            st.session_state["page"] = "manage_slots"
+            st.rerun()
+
         if st.button("View Appointments", key="doc_appts_btn",
                      use_container_width=True):
             st.session_state["page"] = "view_appointments"
