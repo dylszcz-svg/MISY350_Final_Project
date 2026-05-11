@@ -1,0 +1,1 @@
+[{"id": "1", "email": "doctor@clinic.com", "full_name": "Dr. Smith", "password": "doc123", "role": "Doctor"}, {"id": "2", "email": "patient@clinic.com", "full_name": "Jane Doe", "password": "pat123", "role": "Patient"}]
