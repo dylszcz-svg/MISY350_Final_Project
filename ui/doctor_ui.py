@@ -51,8 +51,6 @@ def render_doctor(manager, slot_store, appt_store):
 
         tab1, tab2 = st.tabs(["View All Slots", "Add New Slot"])
 
-
-
         with tab1:
             if len(manager.slots) > 0:
                 st.dataframe(manager.slots)
@@ -86,7 +84,6 @@ def render_doctor(manager, slot_store, appt_store):
         st.title("Patient Appointments")
         st.divider()
 
-
         if len(manager.appointments) == 0:
             st.info("No appointments booked yet.")
         else:
@@ -110,29 +107,33 @@ def render_doctor(manager, slot_store, appt_store):
                         st.markdown(f"**Current Status:** {selected_appt['status']}")
                         st.markdown(f"**Patient Notes:** {selected_appt['notes']}")
 
-                        new_status = st.selectbox(
-                            "Change Status To",
-                            ["Booked", "Completed", "No-Show", "Cancelled"],
-                            key="doc_status_select")
+                        if selected_appt["status"] == "Completed":
+                            st.success("This appointment is completed and cannot be changed.")
+                        elif selected_appt["status"] == "Cancelled":
+                            st.warning("This appointment is cancelled and cannot be changed.")
+                        else:
+                            new_status = st.selectbox(
+                                "Change Status To",
+                                ["Booked", "Completed", "No-Show", "Cancelled"],
+                                key="doc_status_select")
 
-                        doctor_note = st.text_area("Doctor Notes",
-                            placeholder="Add notes...",
-                            key="doc_note_input")
+                            doctor_note = st.text_area("Doctor Notes",
+                                placeholder="Add notes...",
+                                key="doc_note_input")
 
-                        if st.button("Update Status", type="primary",
-                                     use_container_width=True,
-                                     key="doc_update_btn"):
-                            with st.spinner("Updating..."):
-                                time.sleep(2)
+                            if st.button("Update Status", type="primary",
+                                         use_container_width=True,
+                                         key="doc_update_btn"):
+                                with st.spinner("Updating..."):
+                                    time.sleep(2)
 
-                                manager.update_appointment_status(
-                                    selected_appt["appointment_id"],
-                                    new_status, doctor_note
-                                )
+                                    manager.update_appointment_status(
+                                        selected_appt["appointment_id"],
+                                        new_status, doctor_note
+                                    )
 
-                                appt_store.save(manager.appointments)
+                                    appt_store.save(manager.appointments)
 
-
-                                st.success("Status updated!")
-                                time.sleep(2)
-                                st.rerun()
+                                    st.success("Status updated!")
+                                    time.sleep(2)
+                                    st.rerun()
